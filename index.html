@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Feedback Gap | Interactive Learning</title>
+<style>
+:root{--navy:#14263c;--blue:#275b85;--ice:#e7f4fa;--bg:#f5f8fb;--ink:#1b2c3b;--muted:#546577;--teal:#087d78}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--ink);line-height:1.55}
+header{background:var(--navy);color:white;padding:18px max(22px,calc((100vw - 980px)/2));display:flex;justify-content:space-between;gap:16px;align-items:center}
+header strong{font-size:1.05rem}header span{font-size:.78rem;color:#d0e5f2}main{max-width:920px;margin:30px auto;padding:0 18px 60px}
+.progress{height:7px;background:#d9e4eb;border-radius:20px;overflow:hidden;margin-bottom:20px}.progress div{height:100%;background:#299d9a;transition:width .3s}
+.card{background:white;border:1px solid #dbe5ed;border-radius:16px;box-shadow:0 9px 30px #152b4010;padding:clamp(22px,4vw,42px)}
+.eyebrow{color:var(--teal);text-transform:uppercase;letter-spacing:.12em;font-weight:750;font-size:.77rem}
+h1{font-size:clamp(2rem,5vw,3.4rem);line-height:1.1;color:var(--navy);margin:10px 0}h2{font-size:clamp(1.45rem,3vw,2.1rem);line-height:1.2;margin:12px 0;color:var(--navy)}
+.lead{font-size:1.12rem;color:#425669}.muted{color:var(--muted)}.scene{background:#edf4f8;padding:18px 22px;border-radius:12px;margin:22px 0}
+.dialogue{display:flex;gap:14px;margin:15px 0;align-items:flex-start}.avatar{width:45px;height:45px;flex:0 0 45px;border-radius:50%;background:#d6e7f2;color:#224c6b;display:grid;place-items:center;font-weight:800}.avatar.alex{background:#e1e8da;color:#46613a}.bubble{background:#f1f6f9;border-radius:12px;padding:13px 17px;flex:1}.bubble strong{display:block;font-size:.83rem;color:var(--blue);margin-bottom:3px}
+button{font:inherit;cursor:pointer;border-radius:10px;padding:12px 18px;font-weight:650;border:1px solid #b7cbd9;background:white;color:var(--navy)}
+button:hover:not(:disabled){border-color:var(--blue);background:#eaf4fa}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #ffbb51;outline-offset:3px}
+button.primary{background:var(--blue);color:white;border-color:var(--blue)}button.primary:hover{background:#184465;color:white}
+button:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;justify-content:space-between;gap:12px;margin-top:26px;flex-wrap:wrap}
+.choice{display:block;width:100%;text-align:left;margin:10px 0;padding:17px;border:1px solid #cfdee8;border-radius:11px;background:#fff}
+.choice.selected{border:2px solid var(--teal);background:#eaf8f5;padding:16px}.choice .letter{display:inline-block;background:#e7edf3;border-radius:6px;padding:2px 8px;margin-right:9px}
+.feedback{border-left:4px solid var(--teal);background:#eaf7f4;border-radius:8px;padding:16px;margin:17px 0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}.panel{padding:18px;border:1px solid #d7e3ec;border-radius:12px;background:#f8fbfd}
+.iceberg{position:relative;min-height:220px;border-radius:12px;background:linear-gradient(#f2faff 0 33%,#cde8f5 33% 100%);text-align:center;padding:18px;overflow:hidden}
+.iceberg:before{content:"";position:absolute;top:33%;width:100%;left:0;border-top:3px solid #80b4ce}
+.ice-top{position:relative;margin:5px auto 30px;max-width:230px;font-weight:750;color:#214c6b}.ice-below{position:relative;max-width:490px;margin:auto;background:#e8f5fcdd;padding:15px;border-radius:12px;color:#23475d}
+.iceberg-art{max-width:600px;margin:22px auto;border-radius:16px;overflow:hidden;border:1px solid #c4dce9}.iceberg-art svg{display:block;height:auto}.assessment-instruction{border:2px solid #245e82;background:#eaf5fc;border-radius:12px;padding:17px 20px;margin:20px 0}
+.assessment-instruction strong{color:#123d5a}.assessment-instruction p{margin:6px 0}
+.recorded{background:#e7f6ef;border:2px solid #218267;border-radius:12px;padding:14px 17px;margin:16px 0;font-weight:700;color:#145f4b}
+.small{font-size:.88rem}.tag{display:inline-block;background:#e4f2f5;color:#0a656c;border-radius:30px;padding:4px 10px;font-size:.77rem;font-weight:750}
+label{display:block;margin:13px 0 5px;font-weight:650}textarea{width:100%;min-height:75px;border:1px solid #b9cedb;border-radius:9px;padding:12px;font:inherit}
+input[type=range]{width:100%;accent-color:var(--teal)}.meter{height:9px;background:#dbe6ee;border-radius:10px;overflow:hidden}.meter div{height:100%;background:var(--teal)}
+footer{text-align:center;color:#6b7c8a;font-size:.8rem;margin:20px auto}
+@media(max-width:640px){.cols{grid-template-columns:1fr}header{padding:15px 18px}header span{display:none}.card{padding:22px}.actions button{flex:1}}
+</style></head>
+<body><header><strong>THE FEEDBACK GAP</strong><span>Why What You Say Isn't Always What They Hear</span></header>
+<main><div class="progress" aria-label="Course progress"><div id="bar"></div></div><div class="card" id="app" aria-live="polite"></div><footer>Self-initiated instructional design portfolio demonstration · Reflection entries remain in this browser tab only.</footer></main>
+<script>
+const $=s=>document.querySelector(s);const escapeHTML=s=>String(s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let page=0, selections={}, explored={}, firstAssessment={}, revealed={}, impression="",confidence=65, reflection={}, assessment={}, assessed={}, finished=false,submitted=false;
+const totalPages=15;
+const line=(name,text)=>`<div class="dialogue"><div class="avatar ${name==='Alex'?'alex':''}" aria-hidden="true">${name[0]}</div><div class="bubble"><strong>${name}</strong>${text}</div></div>`;
+const button=(label,fn,cls='')=>`<button class="${cls}" onclick="${fn}">${label}</button>`;
+const nav=(next=true)=>`<div class="actions">${page?button('← Back','go(-1)'): '<span></span>'}${next?button(page===14?'Finish course':'Continue →','go(1)','primary'):''}</div>`;
+const choice=(key,opts)=>opts.map((o,i)=>`<button class="choice ${selections[key]===i?'selected':''}" onclick="pick('${key}',${i})"><span class="letter">${String.fromCharCode(65+i)}</span>${o}</button>`).join('');
+const question=(title,opts,key,fb)=>`<h2>${title}</h2>${choice(key,opts)}${selections[key]!==undefined?`<div class="feedback">${fb(selections[key])}</div>`:''}`;
+function pick(key,i){
+ if(key.startsWith('q')&&firstAssessment[key]===undefined)firstAssessment[key]=i;
+ selections[key]=i;
+ if(['morgan','morgan2','alex','alex2'].includes(key)||key.startsWith('q')){
+  if(!explored[key])explored[key]=[];
+  if(!explored[key].includes(i))explored[key].push(i);
+ }
+ render();
+}
+function go(n){if(n>0 && !canContinue())return;page=Math.max(0,Math.min(14,page+n));window.scrollTo(0,0);render()}
+function canContinue(){if([5,6,7,8].includes(page)){const key=({5:'morgan',6:'morgan2',7:'alex',8:'alex2'})[page];return (explored[key]||[]).length===3}const required={1:'lean',2:'confidence',3:'observe',5:'morgan',6:'morgan2',7:'alex',8:'alex2',10:'reflect',11:'q0',12:'q1',13:'q2',14:'q3'};if(page===2)return true;if(page===10)return true;let key=required[page];return !key||selections[key]!==undefined}
+function selectReveal(key){revealed[key]=true;render()}
+function choiceResult(key,opts,results){return `${choice(key,opts)}${selections[key]!==undefined?`<div class="feedback"><strong>What happens next</strong><p>${results[selections[key]]}</p></div>`:''}`}
+function icebergGraphic(stage='intro'){
+ const lower=stage==='intro'
+ ?['Assumptions','Past experiences','Emotions','Unspoken concerns','Context']
+ :['Client pressure','Long hours','Confusing file versions','Embarrassment','Unspoken assumptions'];
+ return `<div class="iceberg-art" role="img" aria-label="Iceberg illustration. Words and actions are visible above the waterline; ${lower.join(', ')} are below the surface.">
+ <svg viewBox="0 0 600 410" width="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+ <defs><linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#b9e3f2"/><stop offset="1" stop-color="#508bad"/></linearGradient><linearGradient id="ice" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e7faff"/><stop offset="1" stop-color="#7ebbd8"/></linearGradient></defs>
+ <rect width="600" height="410" rx="16" fill="#f0f9ff"/>
+ <rect y="137" width="600" height="273" fill="url(#sea)"/>
+ <path d="M0 137 Q25 131 50 137 T100 137 T150 137 T200 137 T250 137 T300 137 T350 137 T400 137 T450 137 T500 137 T550 137 T600 137" stroke="#2c8bb5" stroke-width="3" fill="none"/>
+ <path d="M300 24 L365 137 L233 137 Z" fill="#e5f7fd" stroke="#78b2ce" stroke-width="2"/>
+ <path d="M233 141 L365 141 L429 223 L384 315 L304 391 L223 331 L168 229 Z" fill="url(#ice)" stroke="#488eb4" stroke-width="2"/>
+ <path d="M300 24 L289 85 L317 135 M233 141 L271 190 L242 284 M365 141 L331 207 L384 315 M271 190 L313 274 L304 391" stroke="#e8faff" stroke-width="4" fill="none" opacity=".8"/>
+ <text x="300" y="88" text-anchor="middle" fill="#173d56" font-size="19" font-weight="750">Words</text>
+ <text x="300" y="111" text-anchor="middle" fill="#173d56" font-size="19" font-weight="750">Actions</text>
+ ${lower.map((t,i)=>`<text x="300" y="${177+i*36}" text-anchor="middle" fill="#153e59" font-size="17" font-weight="650">${t}</text>`).join('')}
+ <text x="20" y="120" fill="#37647b" font-size="13" font-weight="700">VISIBLE</text>
+ <text x="20" y="165" fill="#194e6b" font-size="13" font-weight="700">BENEATH</text>
+ <text x="20" y="182" fill="#194e6b" font-size="13" font-weight="700">THE SURFACE</text>
+ </svg></div>`;
+}
+const assess=[
+{role:'Dana · Project Lead',title:'Open the conversation',prompt:'Chris has delivered the weekly report after Friday noon twice this month, delaying updates to other departments. What do you say?',opts:['You need to manage your time better. These delays are unacceptable.','I know things are busy, so let’s not worry about the deadlines.','The last two reports arrived after noon, delaying department updates. What’s getting in the way?'],scores:[0,0,2],fb:['You identified a real concern but assumed poor time management.','You protected comfort at the expense of clarity.','You named the observable concern and impact while inviting missing context.']},
+{role:'Chris · Team Analyst',title:'Respond to feedback',prompt:'You feel frustrated: other departments have been sending urgent Friday requests. How do you respond?',opts:['If people stopped interrupting me, the reports would be on time.','You’re right. I’ll do better.','I understand the delays affect others. Friday requests have competed with the report. Can we clarify priorities?'],scores:[0,1,2],fb:['The competing requests may be real, but blaming others blocks problem-solving.','You acknowledged the concern without explaining the obstacle.','You acknowledged impact, supplied context, and invited a solution.']},
+{role:'Dana · Project Lead',title:'Respond to new information',prompt:'You didn’t know Chris was receiving urgent Friday requests from another department. What now?',opts:['Those requests aren’t an excuse. The deadline is the deadline.','Then we can just move the deadline whenever you’re busy.','I didn’t know about those requests. We still need the noon report. Let’s agree on when to flag conflicting priorities.'],scores:[0,1,2],fb:['This protects the standard but overlooks useful context.','This recognizes context but leaves downstream needs uncertain.','This combines curiosity with a clear expectation and a workable process.']},
+{role:'Chris · Team Analyst',title:'Close the loop',prompt:'Dana proposes prioritizing the report and escalating competing requests earlier. How do you confirm the agreement?',opts:['Okay, sounds good.','I’ll try harder to keep everything on schedule.','I’ll send the report by noon Friday and flag conflicts by Thursday afternoon when possible. Can we review the process next week?'],scores:[0,1,2],fb:['The agreement remains too vague.','Good intent, but actions and timing are unspecified.','You confirmed action, ownership, timing, and follow-up.']}
+];
+function assessmentPage(i){
+ const q=assess[i],key='q'+i,s=selections[key],count=(explored[key]||[]).length;
+ return `<div class="eyebrow">Final challenge · Decision ${i+1} of 4</div><span class="tag">${q.role}</span>
+ <h2>${q.title}</h2><p>${q.prompt}</p>
+ <div class="assessment-instruction" role="note"><strong>IMPORTANT: Your first click is your scored answer.</strong>
+ <p><strong>Step 1:</strong> Choose the response you would actually use. Your FIRST selection is recorded for your assessment score.</p>
+ <p><strong>Step 2:</strong> After your answer is recorded, click the other two options to explore their consequences. These will NOT change your score.</p>
+ <p class="small">Responses explored: ${count} of 3</p></div>
+ ${firstAssessment[key]!==undefined?'<div class="recorded" role="status">✓ Answer recorded! Your score is locked for this decision. Now explore the remaining responses.</div>':''}
+ ${q.opts.map((t,j)=>`<button class="choice ${s===j?'selected':''}" onclick="pick('${key}',${j})"><span class="letter">${'ABC'[j]}</span>${t}${firstAssessment[key]===j?' <span class="tag">First choice</span>':''}</button>`).join('')}
+ ${s!==undefined?`<div class="feedback"><strong>How this response affects the situation</strong><p>${q.fb[s]}</p><p class="small">Compare how each choice affects understanding, accountability, and the next steps.</p></div>`:''}
+ <div class="actions">${button('← Back','go(-1)')}${button(i===3?'See results →':'Next decision →','go(1)','primary') }</div>`;
+}
+function render(){
+const screens=[
+()=>`<div class="eyebrow">Interactive learning · Approximately 20 minutes</div><h1>The Feedback Gap</h1><p class="lead">Why what you say isn't always what they hear.</p>${icebergGraphic("intro")}<p>In this experience, you'll hear one workplace conversation from two perspectives, uncover information gradually, and practice closing the gap between intention and interpretation.</p><p class="small muted">There are no villains in this story. Your first impression is part of the learning.</p>${nav()}`,
+()=>`<div class="eyebrow">Scene 1 · Monday morning</div><h2>One conversation. Two experiences.</h2><div class="scene">Friday's client presentation contained outdated figures. On Monday, Morgan asks Alex to stop by her office.</div>${line('Morgan',"Alex, I wanted to talk about Friday’s presentation. A few figures were outdated, and I was disappointed we didn’t catch that before the client meeting.")}${line('Alex',"I worked all weekend getting that presentation ready. I used the numbers that were in the shared folder.")}${line('Morgan',"I understand that, but we can’t have incorrect information going out to clients. We need to be more careful.")}${line('Alex',"Okay. I’ll make sure it doesn’t happen again.")}<p class="muted">Alex leaves. Neither person feels the issue has been resolved.</p><h3>Whose perspective do you understand more right now?</h3>${choice('lean',['Morgan’s','Alex’s','Both','I need more information'])}${nav()}`,
+()=>`<div class="eyebrow">Perception checkpoint</div><h2>Notice your first impression</h2><p>You leaned toward: <strong>${['Morgan','Alex','Both','Needing more information'][selections.lean]||'—'}</strong>.</p><label for="confidence">How confident are you in your first impression? <strong id="cv">${confidence}%</strong></label><input id="confidence" type="range" min="0" max="100" step="5" value="${confidence}" oninput="confidence=+this.value;document.getElementById('cv').textContent=this.value+'%'"><p class="muted">No answer is right or wrong. We'll revisit this later as you learn more.</p>${nav()}`,
+()=>`<div class="eyebrow">Observation versus interpretation</div>${question('What do you know for certain?',['Morgan does not appreciate Alex’s work.','Alex is avoiding responsibility.','The presentation contained outdated figures and the conversation became tense.'],'observe',i=>i===2?'Exactly. You separated observable events from conclusions about motives.':'That could be an interpretation, but the conversation alone does not establish it as fact.')} ${nav()}`,
+()=>`<div class="eyebrow">First iceberg reveal</div><h2>What was beneath the surface?</h2><p>Open each perspective. Notice how context changes the meaning of the same conversation.</p><div class="cols"><div class="panel"><h3>Morgan</h3>${button(revealed.morgan?'Revealed':'Reveal her context',"selectReveal('morgan')")}${revealed.morgan?'<p>The client emailed Friday questioning whether they could trust the figures. Morgan promised to investigate. She worries about losing the client’s confidence.</p>':''}</div><div class="panel"><h3>Alex</h3>${button(revealed.alex?'Revealed':'Reveal his context',"selectReveal('alex')")}${revealed.alex?'<p>Alex stayed late Thursday and worked Saturday. He believed he was using the latest available numbers and felt his effort was invisible.</p>':''}</div></div><div class="feedback">New context may help us understand a response. It does not automatically prove either person's assumptions.</div>${nav()}`,
+()=>`<div class="eyebrow">Perspective: Morgan</div><h2>Reopen the conversation</h2><p>It's Tuesday. The figures still need correction and there is no plan. You're Morgan. What do you say?</p>${choiceResult('morgan',['We need to make sure you double-check your work before it goes to clients.','I know you’ve been busy. Let’s not dwell on Friday.','Three figures came from an older report. We need to correct them. Can you walk me through how you selected the data?'],['Alex: “I did check my work. I used the file available to me.” The conversation moves toward defending effort.','Alex: “Okay, thanks.” The relationship feels safer, but the process remains unclear.','Alex: “I used the spreadsheet in the shared folder. I thought it was current.” Morgan gains useful information.'])}${nav()}`,
+()=>`<div class="eyebrow">Perspective: Morgan · Repair opportunity</div><h2>Curiosity changes what you can learn</h2><p>Alex says he used the spreadsheet in the shared folder. What do you ask next?</p>${choiceResult('morgan2',['Why didn’t you check more carefully?','Can we look at the folder together and see what was available?','It’s fine. I’ll handle the correction.'],['Alex becomes guarded and offers less context. The file question remains unresolved.','You discover two files: Client_Data_Final.xlsx (Thursday) and Client_Data_Revised.xlsx (Friday morning). The newer file wasn’t clearly flagged.','The immediate tension eases, but no one understands the source of the error.'])}<div class="scene"><strong>What we now know:</strong> The folder had two versions. Alex used the Thursday file and did not recheck Friday morning. The team had no clear method for flagging revisions.</div>${nav()}`,
+()=>`<div class="eyebrow">Perspective switch: Alex</div><h2>What did Alex hear?</h2><p>Morgan says: “I see why you thought that was the correct file. But we still need a way to verify the latest numbers.”</p><div class="scene"><em>Alex's private thought:</em> “I've already explained what happened. Does she think I'm making excuses?”</div><p>You're Alex. How do you respond?</p>${choiceResult('alex',['I can’t be responsible for every file someone uploads after I’m done.','Fine. I’ll check everything again.','I understand the figures need to be right. Can we clarify how updates are communicated?'],['Morgan reiterates the verification requirement. Both people focus on defending positions.','The conversation ends quickly, but the folder process remains unclear.','The two can discuss individual verification and how the team communicates updated files.'])}${nav()}`,
+()=>`<div class="eyebrow">Perspective: Alex · Self-awareness</div><h2>The story you're telling yourself</h2><p>Alex thinks: “Morgan believes I'm incompetent.” What is that statement?</p>${choiceResult('alex2',['An observed fact','An interpretation','A confirmed statement by Morgan'],['Morgan never said this. Alex may feel it strongly, but it is not an observation.','Correct. Alex is making meaning from Morgan’s words; he does not yet know her full intent.','Morgan expressed disappointment about the figures, not a conclusion about Alex’s competence.'])}${icebergGraphic("reveal")}${nav()}`,
+()=>`<div class="eyebrow">Closing the gap</div><h2>Shared accountability</h2><p>Morgan and Alex agree on a plan:</p><div class="panel"><p><strong>Alex</strong> will verify presentation figures against the approved source before each client meeting.</p><p><strong>Morgan</strong> will help establish a clear way to identify and announce revised data files.</p><p><strong>Together</strong> they will review the corrected slides Thursday before the next client meeting.</p></div><div class="feedback">Empathy is not the same as agreement. Understanding Alex’s situation doesn't erase the accuracy concern; maintaining standards doesn't require dismissing his context.</div>${nav()}`,
+()=>`<div class="eyebrow">Return to your first impression</div><h2>What changed your understanding?</h2><p>Initially you leaned toward <strong>${['Morgan','Alex','Both','needing more information'][selections.lean]}</strong> with <strong>${confidence}%</strong> confidence.</p>${choice('reflect',['Learning about Morgan’s client pressure','Learning about Alex’s effort','Discovering the unclear file versions','Recognizing each person’s assumptions','My impression hasn’t changed much'])}<p class="muted">No answer is preferred. Notice what influenced your interpretation—and what you still cannot know for certain.</p>${nav()}`,
+()=>assessmentPage(0),
+()=>assessmentPage(1),
+()=>assessmentPage(2),
+()=>assessmentPage(3)
+];
+if(finished&&submitted){$('#app').innerHTML=`<div class="eyebrow">Submission confirmed · Portfolio demonstration</div><h1>Course Complete!</h1><p class="lead">You've completed <em>The Feedback Gap</em>. Thank you for reflecting on how perception influences workplace conversations.</p><div class="feedback"><strong>✓ Your course is marked complete in this session.</strong><p>Your written reflections have not been transmitted or stored on a server. You can download a personal copy if you'd like to keep them.</p></div><div class="actions">${button('Download my reflection','downloadReflectionAfterSubmit()','primary')}${button('Start again','restart()')}</div>`;$('#bar').style.width='100%';return}
+if(finished){const score=assess.reduce((sum,q,i)=>sum+q.scores[firstAssessment['q'+i]],0);$('#app').innerHTML=`<div class="eyebrow">Course complete</div><h1>What didn't you know?</h1><p class="lead">You can see behavior and hear words, but you rarely have the whole story.</p><div class="panel"><h2>Assessment result: ${score}/8</h2><p>${score>=7?'Strong application of clarity, curiosity, and shared accountability.':score>=4?'Developing application. Review how your decisions affected what information emerged.':'Consider practicing observable feedback, clarification, and specific next steps.'}</p><p class="small muted">This is developmental feedback, not a validated emotional-intelligence measure.</p></div><h2>Prepare for a real conversation</h2><label for="r1">What do you need the other person to understand?</label><textarea id="r1">${escapeHTML(reflection.r1||'')}</textarea><label for="r2">What might they hear instead?</label><textarea id="r2">${escapeHTML(reflection.r2||'')}</textarea><label for="r3">What might be happening beneath the surface?</label><textarea id="r3">${escapeHTML(reflection.r3||'')}</textarea><label for="r4">What question could help you learn more?</label><textarea id="r4">${escapeHTML(reflection.r4||'')}</textarea><label for="r5">How will you confirm shared understanding?</label><textarea id="r5">${escapeHTML(reflection.r5||'')}</textarea><div class="actions">${button('Submit Course','submitCourse()','primary')}${button('Download my private reflection','downloadReflection()')}${button('Restart course','restart()')}</div><p class="small muted">This worksheet downloads to your device. No answers are sent to a server.</p>`;$('#bar').style.width='100%';return}
+$('#app').innerHTML=screens[page]();$('#bar').style.width=((page+1)/(totalPages+1)*100)+'%';
+if(page===4&&(!revealed.morgan||!revealed.alex))$('#app').querySelector('.actions .primary').disabled=true;if([5,6,7,8].includes(page))$('#app').querySelector('.actions .primary').disabled=!canContinue();
+if(page>=11&&page<=14){let i=page-11;$('#app').querySelector('.actions .primary').disabled=(explored['q'+i]||[]).length<3}
+}
+const originalGo=go;go=function(n){if(n>0&&page===4&&(!revealed.morgan||!revealed.alex))return;if(n>0&&page>=11&&page<=14&&(explored['q'+(page-11)]||[]).length<3)return;if(n>0&&page===14){finished=true;window.scrollTo(0,0);render();return}originalGo(n)};
+function submitCourse(){for(let i=1;i<=5;i++)reflection['r'+i]=$('#r'+i).value;submitted=true;window.scrollTo(0,0);render()}
+function downloadReflectionAfterSubmit(){downloadReflection(true)}
+function downloadReflection(alreadySubmitted=false){if(!alreadySubmitted)for(let i=1;i<=5;i++)reflection['r'+i]=$('#r'+i).value;let prompts=['What do you need the other person to understand?','What might they hear instead?','What might be happening beneath the surface?','What question could help you learn more?','How will you confirm shared understanding?'];let txt='THE FEEDBACK GAP — PRIVATE REFLECTION\n\n'+prompts.map((q,i)=>q+'\n'+(reflection['r'+(i+1)]||'')+'\n').join('\n');let url=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));let a=document.createElement('a');a.href=url;a.download='The_Feedback_Gap_Private_Reflection.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),500)}
+function restart(){page=0;selections={};explored={};firstAssessment={};revealed={};assessment={};assessed={};finished=false;submitted=false;reflection={};confidence=65;render();window.scrollTo(0,0)}
+render();
+</script></body></html>
